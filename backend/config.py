@@ -10,7 +10,7 @@ if env_path.exists():
 
 class Settings:
     PROJECT_NAME: str = "ShaqoDooon"
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/shaqodoon")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./shaqodoon.db")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     JWT_SECRET: str = os.getenv("JWT_SECRET", "supersecretjwtkeyforlocaldevelopmentshaqodoon")
