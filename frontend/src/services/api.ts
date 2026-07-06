@@ -86,7 +86,7 @@ export interface ProfileUpdateInput {
 }
 
 class ApiService {
-  private baseUrl = '/api';
+  private baseUrl = import.meta.env.VITE_API_URL || '/api';
 
   setToken(token: string) {
     localStorage.setItem('sh_token', token);

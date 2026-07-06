@@ -1,8 +1,13 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.config import settings
-from backend.database import engine, Base
-from backend.api import auth, profiles, jobs, applications
+try:
+    from backend.config import settings
+    from backend.database import engine, Base
+    from backend.api import auth, profiles, jobs, applications
+except ImportError:
+    from config import settings
+    from database import engine, Base
+    from api import auth, profiles, jobs, applications
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
