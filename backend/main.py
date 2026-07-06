@@ -46,6 +46,40 @@ async def startup():
         # automatic metadata initialization is perfect.
         try:
             await conn.run_sync(Base.metadata.create_all)
-            print("PostgreSQL tables successfully verified/created.")
+            print("Database tables successfully verified/created.")
+            
+            # Check if jobs table is empty
+            from sqlalchemy import text
+            import os
+            
+            result = await conn.execute(text("SELECT COUNT(*) FROM jobs"))
+            count = result.scalar()
+            if count == 0:
+                print("Seeding database with default Somali jobs...")
+                seed_path = os.path.join(os.path.dirname(__file__), 'sql', 'seed.sql')
+                if os.path.exists(seed_path):
+                    with open(seed_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    # Clean up casts if any
+                    content = content.replace('::jsonb', '')
+                    
+                    # Split and execute statements
+                    statements = [stmt.strip() for stmt in content.split(';') if stmt.strip()]
+                    for stmt in statements:
+                        lines = [line for line in stmt.split("\n") if not line.strip().startswith("--")]
+                        clean_stmt = "\n".join(lines).strip()
+                        if clean_stmt:
+                            await conn.execute(text(clean_stmt))
+                    
+                    # Fix SQLite timestamps
+                    await conn.execute(text("UPDATE jobs SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
+                    await conn.execute(text("UPDATE applications SET applied_at = CURRENT_TIMESTAMP WHERE applied_at IS NULL;"))
+                    await conn.execute(text("UPDATE profiles SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL;"))
+                    await conn.execute(text("UPDATE ai_analysis SET analyzed_at = CURRENT_TIMESTAMP WHERE analyzed_at IS NULL;"))
+                    print("Database successfully seeded with 20 Somali jobs!")
+                else:
+                    print(f"Seed file not found at {seed_path}")
         except Exception as e:
-            print(f"Database initialization warning: {e}. Ensure PostgreSQL is running.")
+            print(f"Database initialization warning: {e}. Ensure database is running.")
+
