@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from backend.database import get_db
 from backend.models import User, Job, Profile, Application, AIAnalysis, Skill
