@@ -3,7 +3,7 @@ import json
 import logging
 import pdfplumber
 import docx2txt
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 from backend.config import settings
 
 logger = logging.getLogger("CVParser")

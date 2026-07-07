@@ -67,7 +67,7 @@ class ProfileResponse(ProfileBase):
     user_id: UUID
     resume_url: Optional[str] = None
     profile_score: float
-    metadata_json: Optional[Any] = Field(None, alias="metadata")
+    metadata_json: Optional[Any] = Field(None, validation_alias="metadata_json", serialization_alias="metadata")
     skills: List[SkillResponse] = []
     updated_at: datetime
 
