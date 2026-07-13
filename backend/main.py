@@ -39,6 +39,27 @@ async def root():
         "redoc_url": "/redoc"
     }
 
+@app.get("/api/debug-db")
+async def debug_db():
+    from sqlalchemy import text
+    from backend.database import engine
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("SELECT 1"))
+            val = result.scalar()
+        return {
+            "status": "connected",
+            "test_val": val,
+            "database_url_dialect": engine.url.drivername,
+            "database_name": engine.url.database
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": str(e),
+            "database_url_dialect": engine.url.drivername if engine.url else None
+        }
+
 @app.on_event("startup")
 async def startup():
     # Attempt DB structure initialization on start
