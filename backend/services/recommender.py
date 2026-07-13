@@ -70,12 +70,14 @@ class CareerGuidanceService:
 
     async def _generate_with_gemini(self, job_title: str, missing: List[str], matching: List[str]) -> Optional[str]:
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.gemini_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            from google import genai
+            client = genai.Client(api_key=self.gemini_key)
             
             prompt = self._build_prompt(job_title, missing, matching)
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=prompt
+            )
             return response.text.strip()
         except Exception as e:
             logger.error(f"Gemini guidance generation failed: {e}")
@@ -90,7 +92,7 @@ class CareerGuidanceService:
             response = await client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "value": "You are a professional career guidance counselor and career coach."},
+                    {"role": "system", "content": "You are a professional career guidance counselor and career coach."},
                     {"role": "user", "content": prompt}
                 ]
             )

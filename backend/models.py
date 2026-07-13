@@ -5,10 +5,31 @@ from backend.database import Base
 from datetime import datetime
 from backend.config import settings
 
-# Conditional database column types to support SQLite & Postgres
 if "sqlite" in settings.DATABASE_URL:
     JSONType = JSON
-    UUIDType = UUID(as_uuid=True)
+    from sqlalchemy.types import TypeDecorator, CHAR
+    class SQLiteUUID(TypeDecorator):
+        impl = CHAR
+        cache_ok = True
+
+        def load_dialect_impl(self, dialect):
+            return dialect.type_descriptor(CHAR(36))
+
+        def process_bind_param(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            return value
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            try:
+                return uuid.UUID(value)
+            except ValueError:
+                return value
+    UUIDType = SQLiteUUID
     EmbeddingType = JSON
 else:
     from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID

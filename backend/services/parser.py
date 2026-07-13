@@ -70,14 +70,17 @@ class CVParserService:
 
     async def _parse_with_gemini(self, text: str) -> Optional[Dict[str, Any]]:
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.gemini_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            from google import genai
+            from google.genai import types
+            client = genai.Client(api_key=self.gemini_key)
             
             prompt = self._build_prompt(text)
-            response = model.generate_content(
-                prompt, 
-                generation_config={"response_mime_type": "application/json"}
+            response = client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
             )
             return json.loads(response.text)
         except Exception as e:
@@ -93,7 +96,7 @@ class CVParserService:
             response = await client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "value": "You are a professional resume parsing assistant. Return outputs strictly in valid JSON format."},
+                    {"role": "system", "content": "You are a professional resume parsing assistant. Return outputs strictly in valid JSON format."},
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"}
