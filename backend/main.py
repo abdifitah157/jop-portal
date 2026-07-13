@@ -43,6 +43,7 @@ async def root():
 async def debug_db():
     from sqlalchemy import text
     from backend.database import engine
+    from backend.models import UUIDType
     try:
         async with engine.connect() as conn:
             result = await conn.execute(text("SELECT 1"))
@@ -51,13 +52,15 @@ async def debug_db():
             "status": "connected",
             "test_val": val,
             "database_url_dialect": engine.url.drivername,
-            "database_name": engine.url.database
+            "database_name": engine.url.database,
+            "uuid_type_class": str(UUIDType)
         }
     except Exception as e:
         return {
             "status": "error",
             "error_message": str(e),
-            "database_url_dialect": engine.url.drivername if engine.url else None
+            "database_url_dialect": engine.url.drivername if engine.url else None,
+            "uuid_type_class": str(UUIDType) if 'UUIDType' in locals() else None
         }
 
 @app.on_event("startup")
