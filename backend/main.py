@@ -12,7 +12,8 @@ except ImportError:
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Somali Market AI-Powered Job Matching & Career Guidance Portal",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
 # Set up CORS origins
@@ -64,20 +65,29 @@ async def startup():
                     # Clean up casts if any
                     content = content.replace('::jsonb', '')
                     
-                    # Split and execute statements
+                    # Split and execute statements one by one (per-statement error handling)
                     statements = [stmt.strip() for stmt in content.split(';') if stmt.strip()]
+                    success_count = 0
                     for stmt in statements:
                         lines = [line for line in stmt.split("\n") if not line.strip().startswith("--")]
                         clean_stmt = "\n".join(lines).strip()
                         if clean_stmt:
-                            await conn.execute(text(clean_stmt))
+                            try:
+                                await conn.execute(text(clean_stmt))
+                                success_count += 1
+                            except Exception as stmt_err:
+                                print(f"Seed statement warning (continuing): {stmt_err}")
+                                print(f"Statement preview: {clean_stmt[:100]}")
                     
                     # Fix SQLite timestamps
-                    await conn.execute(text("UPDATE jobs SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
-                    await conn.execute(text("UPDATE applications SET applied_at = CURRENT_TIMESTAMP WHERE applied_at IS NULL;"))
-                    await conn.execute(text("UPDATE profiles SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL;"))
-                    await conn.execute(text("UPDATE ai_analysis SET analyzed_at = CURRENT_TIMESTAMP WHERE analyzed_at IS NULL;"))
-                    print("Database successfully seeded with 20 Somali jobs!")
+                    try:
+                        await conn.execute(text("UPDATE jobs SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;"))
+                        await conn.execute(text("UPDATE applications SET applied_at = CURRENT_TIMESTAMP WHERE applied_at IS NULL;"))
+                        await conn.execute(text("UPDATE profiles SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL;"))
+                        await conn.execute(text("UPDATE ai_analysis SET analyzed_at = CURRENT_TIMESTAMP WHERE analyzed_at IS NULL;"))
+                    except Exception as ts_err:
+                        print(f"Timestamp fix warning: {ts_err}")
+                    print(f"Database seeding completed: {success_count} statements executed.")
                 else:
                     print(f"Seed file not found at {seed_path}")
         except Exception as e:

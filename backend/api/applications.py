@@ -13,15 +13,16 @@ from backend.services.recommender import career_guidance_service
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
 
-@router.post("/", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
 async def submit_application(
     app_in: ApplicationCreate,
     current_seeker: User = Depends(get_current_seeker),
     db: AsyncSession = Depends(get_db)
 ):
-    # 1. Verify Job exists
+    # 1. Verify Job exists (convert UUID to str for SQLite compatibility)
+    job_id_str = str(app_in.job_id)
     job_result = await db.execute(
-        select(Job).options(selectinload(Job.skills)).filter(Job.id == app_in.job_id)
+        select(Job).options(selectinload(Job.skills)).filter(Job.id == job_id_str)
     )
     job = job_result.scalars().first()
     if not job:
@@ -134,7 +135,7 @@ async def submit_application(
     )
     return res.scalars().first()
 
-@router.get("/", response_model=List[ApplicationResponse])
+@router.get("", response_model=List[ApplicationResponse])
 async def list_applications(
     job_id: Optional[UUID] = None,
     current_user: User = Depends(get_current_user),

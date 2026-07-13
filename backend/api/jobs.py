@@ -12,7 +12,7 @@ from backend.services.matcher import job_matcher_service
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
-@router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def create_job(
     job_in: JobCreate,
     current_employer: User = Depends(get_current_employer),
@@ -70,7 +70,7 @@ async def create_job(
     )
     return result.scalars().first()
 
-@router.get("/", response_model=List[JobResponse])
+@router.get("", response_model=List[JobResponse])
 async def list_jobs(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Job)

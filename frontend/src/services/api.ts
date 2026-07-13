@@ -86,7 +86,14 @@ export interface ProfileUpdateInput {
 }
 
 class ApiService {
-  private baseUrl = import.meta.env.VITE_API_URL || '/api';
+  private baseUrl = (() => {
+    if (typeof window !== 'undefined' && 
+        window.location.hostname !== 'localhost' && 
+        window.location.hostname !== '127.0.0.1') {
+      return '/api';
+    }
+    return import.meta.env.VITE_API_URL || '/api';
+  })();
 
   setToken(token: string) {
     localStorage.setItem('sh_token', token);
@@ -263,7 +270,7 @@ class ApiService {
     skills: string[];
     mandatory_skills: string[];
   }): Promise<Job> {
-    return this.request<Job>('/jobs/', {
+    return this.request<Job>('/jobs', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -274,7 +281,7 @@ class ApiService {
 
   // --- APPLICATIONS ENDPOINTS ---
   async submitApplication(jobId: string, coverLetter?: string): Promise<Application> {
-    return this.request<Application>('/applications/', {
+    return this.request<Application>('/applications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -287,7 +294,7 @@ class ApiService {
   }
 
   async listApplications(jobId?: string): Promise<Application[]> {
-    let url = '/applications/';
+    let url = '/applications';
     if (jobId) {
       url += `?job_id=${jobId}`;
     }
